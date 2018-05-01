@@ -1,6 +1,6 @@
 Project Digit Recognition with RNN (Recurrent Neural Net with LSTM)
 
-Project nameDigit Recognition with RNN (Recurrent Neural Net with LSTM)
+Digit Recognition with RNN (Recurrent Neural Net with LSTM)
 Apr 2018 – May 2018
 Project description-Created a recurrent neural net with 98% accuracy
 -Used Mnist dataset from tensorflow
