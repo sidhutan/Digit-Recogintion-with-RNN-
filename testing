@@ -1,4 +1,4 @@
-class JPFCVA01Calculation:
+  class JPFCVA01Calculation:
     def __init__(self,cl_FileProcessor):
         self.directory = cl_FileProcessor.directory
         self.IndexVTId = cl_FileProcessor.IndexVTId
@@ -36,8 +36,8 @@ class JPFCVA01Calculation:
         Average=np.average(list(dic_temp.values()))
         for ST in STicker:
             dic_1.update({ST:dic_temp[ST]*Average})
-        print(dic_temp)
-        print(dic_1)
+        print("dic_temp",dic_temp)
+        print("dic_1",dic_1)
         return dic_1
         
     def Weight_abs2(self):
@@ -52,24 +52,23 @@ class JPFCVA01Calculation:
                 dic_2[i]=min(1,dic_2[i])
         print(dic_2)
         return dic_2
-    def Weight_abs3(self):
-        self.Weight_abs2()
     def Tracker_ret(self,GenTicker):
         P_t=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]==GenTicker)&(self.DailyPrices["PriceDate"]==self.RunDate),"Price"].values[0]
         P_t_1=self.DailyPrices.loc[(self.DailyPrics["GenericTicker"]==GenTicker)&(self.DailyPrices["PriceDate"]==self.LastRunDate),"Price"].values[0]
-        return P_t/P_t_1-1
-    def Tracker_Return(self,GenTicker):
+        return (P_t/P_t_1-1)
+    def Tracker_Return(self):
         dic_3={}
         Tracker_Ticker=sorted(self.DailyPrices[(self.DailyPrices["PriceDate"]==self.LastRunDate)&(self.DailyPrices["SpecificInstrumentVTId"].str.contain("X:JP")),"SpecificTicker"])
         STicker=sorted(self.DailyPrices.loc[(self.DailyPrices["PriceDate"]==self.LastRunDate)&(self.DailyPrices["SpecificInstrumentVTId"].str.contains(':WM')),"SpecificTicker"])
         final_2=list(zip(STicker,Tracker_Ticker))
         for i,j in final_2:
             dic_3.update({i:self.Tracker_ret(j)})
-        print(dic_3)
+        print("dic_3",dic_3)
         return dic_3
         
     def IndexLevel(self):
         STicker=sorted(self.DailyPrices.loc[(self.DailyPrices["PriceDate"]==self.LastRunDate)&(self.DailyPrices["SpecificInstrumentVTId"].str.contains(':WM')),"SpecificTicker"])
+        print("IndexLevel",sum(self.Weight_abs2()[x]*self.Tracker_Return()[x] for x in STicker))
         return sum(self.Weight_abs2()[x]*self.Tracker_Return()[x] for x in STicker)
         
     def CashUnits(self):
@@ -83,28 +82,31 @@ class JPFCVA01Calculation:
         
             
     def NewCloseComposition(self):
+        IL_1=self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,"IndexLevel"].values[0]
         t_NewCloseComposition = self.OpenComposition.copy()
         t_NewCloseComposition["Date"] = self.RunDate
+        t_NewOpenComposition.loc[~t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'Units'] = IL_1*t_NewOpenComposition.loc[~t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'GenericTicker'].apply((lambda x:self.Weights_1(x)))/\
+        t_NewOpenComposition.loc[t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'Units']=self.CashUnits()                                                                                                    t_NewOpenComposition.loc[~t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'Price']
 #        EFX = self.Price("EUR WMCO Curncy",self.RunDate)
-        df = t_NewCloseComposition.loc[~t_NewCloseComposition['InstrumentVTId'].str.contains('Ca:'),['Units','Price','FxRate']]
-        t_NewCloseComposition.loc[t_NewCloseComposition['InstrumentVTId'].str.contains('Ca:'),'Units'] = self.CashUnits(self.IndexLevel(),df)
         return t_NewCloseComposition
 
     def NewOpenComposition(self):
-        IL_1=self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,"IndexLevel"].values[0]
+#        IL_1=self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,"IndexLevel"].values[0]
         t_NewOpenComposition = self.OpenComposition.copy()
         t_NewOpenComposition["Date"] = self.RunDate
 #        EFX_1 = self.Price("EUR WMCO Curncy",self.LastRunDate)
-        t_NewOpenComposition.loc[~t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'Units'] = IL_1*t_NewOpenComposition.loc[~t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'GenericTicker'].apply((lambda x:self.Weight(x)))/\
-                                                                                                            t_NewOpenComposition.loc[~t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'Price']
-        t_NewOpenComposition.loc[t_NewOpenComposition['InstrumentVTId'].str.contains('Ca:'),'Units']=self.CashUnits()
         return t_NewOpenComposition
 
     def OpenIndexSpecific(self):
         t_indexspecificdata = self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,:].copy()
         t_indexspecificdata["PriceDate"] = self.RunDate
         t_indexspecificdata["IndexLevel"] = self.IndexLevel()
-        t_Indexspecificdata["Weight"]=self.Weight()
+        temp_dic=self.Weight()
+        for i in list(self.Weight().keys()):
+            temp_dic["JTRD"+i[0:3]]=temp_dic[i]
+            del temp_dic[i]
+        print(temp_dic)
+        t_Indexspecificdata["Weights"]=t_Indexspecificdata["GenericTicker"].map(temp_dic)
         return t_indexspecificdata   
     
     
@@ -119,4 +121,3 @@ class JPFCVA01Calculation:
     @hp.output_file(["VTOpenComposition", "VTIndexSpecificData"])
     def fn_VTOpenComp(self):
         return [self.NewCloseComposition(),self.OpenIndexSpecificData()]
-    
