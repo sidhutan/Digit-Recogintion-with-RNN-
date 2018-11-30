@@ -7,6 +7,7 @@ Created on Sun Aug 13 18:50:06 2017
 
 from enum import Enum
 import numpy as np
+import bisect
 import os
 import pandas as pd
 import scipy.stats
@@ -6082,32 +6083,44 @@ class CSEAFMRS_IndexCal:
         self.IndexVTId = cl_FileProcessor.IndexVTId
         self.log = cl_FileProcessor.log
         self.DailyPrices = cl_FileProcessor.dict_FileData["VTDailyPrices"]
-        self.DailyPrices.to_csv("CSEAFMRS_dailyprices.csv")
         self.IndexSpecificData = cl_FileProcessor.dict_FileData["VTIndexSpecificData"]
         self.CloseComposition = cl_FileProcessor.dict_FileData["VTCloseComposition"]
-        self.CloseComposition.to_csv("CSEAFMRS_CloseComposition.csv")
+#        self.CloseComposition.to_csv("CSEAFMRS_CloseComposition.csv")
         self.OpenComposition = cl_FileProcessor.dict_FileData["VTOpenComposition"]
-        self.OpenComposition.to_csv("CSEAFMRS_OpenComposition.csv")
+#        self.OpenComposition.to_csv("CSEAFMRS_OpenComposition.csv")
         self.DailyPrices["PriceDate"] = pd.to_datetime(self.DailyPrices["PriceDate"])
-        self.DailyPrices.to_csv("CSEAFMRS_dailyprices.csv")
+        self.DailyPrices["SettlementDate"]=pd.to_datetime(self.DailyPrices["SettlementDate"])
+#        self.DailyPrices.to_csv("CSEAFMRS_dailyprices.csv")
         self.IndexSpecificData["PriceDate"] = pd.to_datetime(self.IndexSpecificData["PriceDate"])
-        self.IndexSpecificData.to_csv("CSEAFMRS_IndexSpecificData.csv")
+#        self.IndexSpecificData.to_csv("CSEAFMRS_IndexSpecificData.csv")
         self.RunDate = cl_FileProcessor.RunDate
         self.LastRunDate = cl_FileProcessor.LastRunDate
     
         
      def Lg_Returns(self,Price_t,Price_t_1):
-         return log(Price_t/Price_t_1)
+         return np.log(Price_t/Price_t_1)
          
      def delta(self):
          Lev=25
-         Lev_1=0.2
          IL_1=self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,"IndexLevel"].values[0]
          Run_date_price=self.IndexSpecificData.loc[(self.DailyPrices["PriceDate"]==self.RunDate)&(self.DailyPrices["GenericTicker"]=="SPTR"),"Price"].values[0]
-         
          Price_array=list(self.DailyPrices.loc[(self.DailyPrices["SpecificTicker"]=="SPTR")&(self.DailyPrices["PriceDate"]!=self.RunDate),["PriceDate","Price"]].sort_values(by="PriceDate").tail(4)["Price"])
-         return 2*IL_1*max(-1,25*0.2*sum(log(Run_date_price)**4)/np.prod(Price_array))
-         
+         return 2*IL_1*max(-1,Lev*0.2*sum(np.log(Run_date_price)**4)/np.prod(Price_array))
+    
+     def t_Es(self,ticker):
+        settlementDate=self.DailyPrices.loc[(self.DailyPrices["SpecificTicker"]==ticker)&(self.DailyPrices["PriceDate"]==self.RunDate),"SettlementDate"]
+        return (settlementDate-self.RunDate)/360
+
+     def Far_expiry(self):
+        settlementDates=list(self.DailyPrices.loc[(self.DailyPrices["GenericTicker"].str.contain("Z=R"))&(self.DailyPrices["PriceDate"]==self.RunDate),"SettlementDate"])
+        leftnearestdate=bisect.bisect_left(settlementDates,self.Rundate)
+        rightnearsetdate=bisect.bisect_right(settlementDates,self.Rundate)
+        
+        
+
+        
+        
+        
         
      def OpenIndexSpecific(self):
         t_indexspecificdata = self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,:].copy()
