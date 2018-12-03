@@ -25,7 +25,9 @@ class CSEAFMRS_IndexCal:
          
         
      def Lg_Returns(self,Price_t,Price_t_1):
-         #SPX
+         #SPTR
+         Price_t=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="SPTR")&(self.DailyPrices.loc["PriceDate"]==self.RunDate),"Price"].values[0]
+         Price_t_1=self.DailyPrices.loc[(self.DailyPrices["GenericTicket"]=="SPTR")&(self.DailyPrices.loc["PriceDate"]==self.LastRunDate),"Price"].values[0]
          return np.log(Price_t/Price_t_1)
          
      def Delta(self):
@@ -57,14 +59,51 @@ class CSEAFMRS_IndexCal:
         settleDates_number=dt.date.toordinal(self.settleDates(ticker))
         return Slope*settleDates_number+Intercept
 
-        
-        
-        
-        
+     def Borrow(self):
+         SPX_divident=self.DailyPrices.loc[(self.DailyPrices["SpecificTicker"]=="SPX")&(self.DailyPrices["PriceDate"]==self.RunDate),"Dividentyield"].values[0]
+         T1=self.T_Es("ES1")
+         T2=self.T_Es("ES2")
+         R1=self.Expiry("ES1")
+         R2=self.Expiry("ES2")
+         ES1_Price_t=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="ES1")&(self.DailyPrices.loc["PriceDate"]==self.RunDate),"Price"].values[0]
+         ESES=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="S:ESES 1-2")&(self.DailyPrices["PriceDate"]==self.RunDate),"Price"].values[0]
+         return (-SPX_divident-(1/(T2-T1))*(R1*T1-R2*T2+(np.log(1+ESES/ES1_Price_t))))
+    
+     def Fin_rate(self):
+         libor_t=self.DailyPrices[(self.DailyPrices["GenericTicker"]=="US0003m")&(self.DailyPrices["PriceDate"]==self.RunDate),"Price"].values[0]
+
+         if self.Delta()>=0:
+             return libor_t-self.Borrow()+(0.001/2)
+         else:
+             return  libor_t-self.Borrow()-(0.001/2)
+     def TA(self):
+         #IndexSpecificData
+         Delta_t_1=self.IndexSpecificData[(self.IndexSpecificData["PriceDate"]==self.LastRunDate),"IndexNotional"].values[0]
+         Finrate_t_1=self.IndexSpecificData[(self.IndexSpecificData["PriceDate"]==self.LastRunDate),"Fee"].values[0]
+         days_bet_run_last=(self.RunDate-self.LastRunDate)/np.timedelta64(1, 'D')
+         SPTR_t=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="SPTR")&(self.DailyPrices["PriceDate"]==self.RunDate),"Price"].values[0]
+         SPTR_t_1=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="SPTR")&(self.DailyPrices["PriceDate"]==self.LastRunDate),"Price"].values[0]
+         return (Delta_t_1*Finrate_t_1*(days_bet_run_last)/360)+(abs(self.Delta()-(Delta_t_1*SPTR_t/SPTR_t_1-1))*0.0002)
+             
+     def IndexLevel(self):
+         IL_t_1=self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate, "IndexLevel"].values[0]
+         Delta_t_1=self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,"IndexNotional"].values[0]
+         SPTR_t=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="SPTR")&(self.DailyPrices["PriceDate"]==self.RunDate),"Price"].values[0]
+         SPTR_t_1=self.DailyPrices.loc[(self.DailyPrices["GenericTicker"]=="SPTR")&(self.DailyPrices["PriceDate"]==self.LastRunDate),"Price"].values[0]
+         return round(IL_t_1,2)+(Delta_t_1*(SPTR_t/SPTR_t_1 -1 ))-self.TA()
+
      def OpenIndexSpecific(self):
         t_indexspecificdata = self.IndexSpecificData.loc[self.IndexSpecificData["PriceDate"]==self.LastRunDate,:].copy()
         t_indexspecificdata["PriceDate"] = self.RunDate
+        t_indexspecificdata["Fee"]=self.Fin_rate()
+        t_indexspecificdata["Weights"]=self.Borrow()
+        t_indexspecificdata["IndexNotional"]=self.Delta()
         return t_indexspecificdata
+    
+     def VTOpenComposition(self):
+            pass
+      def VTCloseComposition(self):
+        pass
         
      @hp.output_file(["VTCloseComposition"])
      def fn_VTCloseComp(self):
