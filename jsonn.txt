@@ -1,9 +1,0 @@
-python processcaller.py "[{\"Process\":\"GenerateVTComposition\",\"RunDate\":\"2018-06-07T00:00:00\",\"LastRunDate\":\"2018-06-06T00:00:00\",\"IndexVTId\":\"Ii:EU:XX:XX:X:XX:IXM2:XXXX:SG\",\"IndexCurrency\":\"USD\",\"IsIndexOfIndices\":false,\"IsStaticConstituent\":false,\"FileDirectory\":\"IiEUXXXXXXXIXMOXXXXSG\",\"CreatedBy\":null,\"CreatedDate\":\"0001-01-01T00:00:00\",\"LastModifiedBy\":null,\"LastModifiedDate\":null}]"
-
-
-processcaller.exe "[{\"Process\":\"GenerateVTComposition\",\"RunDate\":\"2018-10-02T00:00:00\",\"LastRunDate\":\"2018-10-01T00:00:00\",\"IndexVTId\":\"Fi:US:XX:XX:X:XX:XXG4:XXXX:SG\",\"IndexCurrency\":\"USD\",\"IsIndexOfIndices\":false,\"IsStaticConstituent\":false,\"FileDirectory\":\"FiUSXXXXXXXXXG4XXXXSG\",\"CreatedBy\":null,\"CreatedDate\":\"0001-01-01T00:00:00\",\"LastModifiedBy\":null,\"LastModifiedDate\":null}]"
-
-
-
-(CMD)
-C:\Users\tanmay.sidhu\Documents\Vontobel_business_layer\Vontobel_business_layer\dist\processcaller>processcaller.exe "[{\"Process\":\"GenerateVTComposition\",\"RunDate\":\"2018-10-02T00:00:00\",\"LastRunDate\":\"2018-10-01T00:00:00\",\"IndexVTId\":\"Fi:US:XX:XX:X:XX:XXG4:XXXX:SG\",\"IndexCurrency\":\"USD\",\"IsIndexOfIndices\":false,\"IsStaticConstituent\":false,\"FileDirectory\":\"FiUSXXXXXXXXXG4XXXXSG\",\"CreatedBy\":null,\"CreatedDate\":\"0001-01-01T00:00:00\",\"LastModifiedBy\":null,\"LastModifiedDate\":null}]"
