@@ -112,6 +112,7 @@ class rule_divisor(conf):
                         Income_dis_percent=i.loc[(i["EventType"].isin(["Cash Dividend"]))&(i["LocalCurrency"].isin(["AU"])),"IncomePercent"]
                         Ef_TaxRate=au_TaxRate*(1 - Frank_Percent - Income_dis_percent)
                         au_EventAmount=i.loc[(i["EventType"].isin(["Cash Dividend"]))&(i["LocalCurrency"].isin(["AU"])),"EventAmount"].sum()
+                        
                         Ef_EventAmount=au_EventAmount(1-Ef_TaxRate)
                         i.loc[i["LocalCurrency"].isin(["AU"])&(i["EventType"].isin(["Cash Dividend"])),"GTR(PAF)"]=(au_PriceExT1-(au_EventAmount*au_Fx_1))/au_PriceExT1
                         i.loc[i["LocalCurrency"].isin(["AU"])&(i["EventType"].isin(["Cash Dividend"])),"NTR(PAF)"]=(au_PriceExT1-(Ef_EventAmount*au_Fx_1))/au_PriceExT1
@@ -349,14 +350,24 @@ class rule_divisor(conf):
                 logA.info("Cash Dividend for exceptional cases Calculation is INITIATED")
                 """CHANGE Country CODE to currency HERE"""
                 au_PriceExT1=self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"PriceExT1"]
-                print("Inside Cash divi_AU")
+                logA.info("Inside Cash divi_AU {}".format(au_PriceExT1))
                 au_Fx_1=self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"FxExT1"]
-                au_TaxRate=self.sql_cash_div_except.loc[(self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"TaxRate"]
-                Frank_Percent=self.sql_cash_div_except.loc[(self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"FrankingPercent"]
-                Income_dis_percent=self.sql_cash_div_except.loc[(self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"IncomePercent"]
+                logA.debug("Value of Au_FX_1= {} ".format(au_Fx_1))
+                au_TaxRate=self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"TaxRate"]
+                print("Tax",au_TaxRate)
+#                self.sql_cash_div_except.to_csv("waah.csv")
+                logA.debug("Value of au_TaxRate= {} ".format(au_TaxRate))
+                Frank_Percent=self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"FrankingPercent"]
+                logA.debug("Value of Frank_Percent= {} ".format(Frank_Percent))
+                Income_dis_percent=self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"IncomePercent"]
+                logA.debug("Value of Income_dis_percent= {} ".format(Income_dis_percent))
                 Ef_TaxRate=(au_TaxRate/100)*(1 - Frank_Percent - Income_dis_percent)
-                au_EventAmount=self.sql_cash_div_except.loc[(self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"EventAmount"]
-                Ef_EventAmount=au_EventAmount(1-Ef_TaxRate)
+                logA.debug("Value of Ef_TaxRate= {} ".format(Ef_TaxRate))
+                au_EventAmount=self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["AU"])),"EventAmount"]
+                logA.debug("Value of au_EventAmount= {} ".format(au_EventAmount))
+#                self.sql_cash_div_except.to_csv("AU_check.csv")
+                Ef_EventAmount=au_EventAmount*(1-Ef_TaxRate)
+                logA.debug("Value of Ef_EventAmount= {} ".format(Ef_EventAmount))
                 self.sql_cash_div_except.loc[self.sql_cash_div["LocalCurrency"].isin(["AU"])&(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"])),"Div_GTR(PAF)"]=(au_PriceExT1-(au_EventAmount*au_Fx_1))/au_PriceExT1
                 self.sql_cash_div_except.loc[self.sql_cash_div["LocalCurrency"].isin(["AU"])&(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"])),"Div_NTR(PAF)"]=(au_PriceExT1-(Ef_EventAmount*au_Fx_1))/au_PriceExT1
                 self.sql_cash_div_except.loc[self.sql_cash_div["LocalCurrency"].isin(["AU"])&(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"])),"Div_PR(PAF)"]=1
@@ -367,7 +378,8 @@ class rule_divisor(conf):
                 self.sql_cash_div_except.loc[self.sql_cash_div["LocalCurrency"].isin(["AU"])&(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"])),"AddC_GTR(CASH)"]=au_EventAmount*au_Fx_1
                 self.sql_cash_div_except.loc[self.sql_cash_div["LocalCurrency"].isin(["AU"])&(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"])),"AddC_NTR(CASH)"]=Ef_EventAmount*au_Fx_1
                 self.sql_cash_div_except.loc[self.sql_cash_div["LocalCurrency"].isin(["AU"])&(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"])),"AddC_PR(CASH)"]=0
-                                             
+                logA.info("Exceptional cases's Cash Dividend Calculation is SUCCESFULLY done")
+#                self.sql_cash_div_except.to_csv("cd_1st.csv")                             
 #            elif self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["JP","KR"])),"EventType"].count()>0:
 #                logA.info("Cash Dividend for JP and KR is INITIATED")
 #                if self.sql_cash_div_except.loc[(self.sql_cash_div_except["EventType"].isin(["Cash Dividend"]))&(self.sql_cash_div_except["LocalCurrency"].isin(["KR"])),"EventType"].count()>0:
@@ -419,7 +431,7 @@ class rule_divisor(conf):
             if self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"EventType"].count() > 0:
                 
                 logA.info("Cash Dividend for non exceptional cases Calculation is INITIATED")
-                self.sql_cash_div_ex_excep["GTR(PAF)"]=(self.sql_cash_div_ex_excep["PriceExT1"] - ( self.sql_cash_div_ex_excep["EventAmount"] * self.sql_cash_div_ex_excep["FxExT1"]))/self.sql_cash_div_ex_excep["PriceExT1"]
+#                self.sql_cash_div_ex_excep["GTR(PAF)"]=(self.sql_cash_div_ex_excep["PriceExT1"] - ( self.sql_cash_div_ex_excep["EventAmount"] * self.sql_cash_div_ex_excep["FxExT1"]))/self.sql_cash_div_ex_excep["PriceExT1"]
                 EventAmount=self.fn_cash_ex_excep("Cash Dividend","EventAmount")
                 logA.debug("NTR_EventAmount_{0}".format(EventAmount))
                 PriceExT1=self.fn_cash_ex_excep("Cash Dividend","PriceExT1")
@@ -428,9 +440,20 @@ class rule_divisor(conf):
                 logA.debug("NTR_FxExT1_{0}".format(FxExT1))
                 TaxRate=self.fn_cash_ex_excep("Cash Dividend","TaxRate")
                 logA.debug("NTR_TaxRate_{0}".format(TaxRate))
-                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"NTR(PAF)"]=(PriceExT1 - ( EventAmount * FxExT1 * (TaxRate/100) )) / PriceExT1
-                logA.info("NTR Calculation is SUCCESFULLY done")
-                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"]=="Cash Dividend","PR"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"Div_NTR_PAF"]=(PriceExT1 - ( EventAmount * FxExT1 * (TaxRate/100) )) / PriceExT1
+                logA.info("Div-CD-NTR Calculation is SUCCESFULLY done")
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"Div_GTR_PAF"]=(PriceExT1 - ( EventAmount * FxExT1 )) / PriceExT1
+                logA.info("Div-CD-GTR Calculation is SUCCESFULLY done")
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"Div_PR_PAF"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"Div_NSAF"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"SCR_GTR_UAF"]=( PriceExT1 / ( PriceExT1 - EventAmount * FxExT1))
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"SCR_NTR_UAF"]=( PriceExT1 / ( PriceExT1- EventAmount * FxExT1 * (TaxRate/100) ))
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"SCR_PR_UAF"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"SCR_PAF"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"Adc_"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"AddC_GTR(CASH)"]=1
+                self.sql_cash_div_ex_excep.loc[self.sql_cash_div_ex_excep["EventType"].isin(["Cash Dividend"]),"AddC_NTR(CASH)"]=1
+                logA.info("Div-CD-PR Calculation is SUCCESFULLY done")
                 logA.info("Cash Dividend Calculation is SUCCESFULLY done")
                 self.sql_cash_div_ex_excep.to_csv("sql_cash_div_ex_excep.csv")
         except Exception as e:
